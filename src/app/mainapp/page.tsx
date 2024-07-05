@@ -3,13 +3,8 @@
 import Link from "next/link"
 import {
   CircleUser,
-  Home,
-  LineChart,
   Menu,
-  Package,
   Package2,
-  ShoppingCart,
-  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,14 +18,27 @@ import {
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useState } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { LoaderCircle } from 'lucide-react'
+import {  useEffect, useState  } from "react"
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
+interface chat {
+  type: string,
+  message: string
+}
 
 export default function MainApp() {
 
     const [query, setQuery] = useState("");
     const [file, setFile] = useState(null);
+    const [list, setList] = useState<chat[]>([]);
+    const [sideList, setSideList] = useState<chat[][]>([]);
+
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
+
 
     const handleFileChange = (e: any) => {
         if (e.target.files && e.target.files[0]) {
@@ -38,10 +46,38 @@ export default function MainApp() {
         }
     };
 
+    useEffect(() => {
+
+      ( async () => {
+
+        const response = await axios.get('/api/getChats', {
+          withCredentials: true
+        }); 
+        if(response.data.status == 200){
+          setSideList(response.data.chats);
+        }
+      
+      })()
+
+    },[])
+
+    const logout = async () => {
+      const response = await axios.get('/api/logout', {
+        withCredentials: true
+      });
+
+      if(response.data.status == 200){
+        router.push('/signin');
+      }
+    }
+
     const onSubmit = async (e: any) => {
         e.preventDefault();
         setLoading(true);
         if(file && query){
+
+            setList( (prev) => [...prev,{ type: "User", message: query }]);
+            let recent = [{ type: "User", message: query }];
             const formData = new FormData();
             formData.append('file', file);
             formData.append('query', query);
@@ -52,8 +88,17 @@ export default function MainApp() {
             });
             const result = await response.json()
             setLoading(false);
+            setList( (prev) => [...prev,{ type: "Bot", message: result.answer }]);
             setQuery("");
-            console.log(result.answer);
+            recent = [...recent, { type: "Bot", message: result.answer }]
+            await axios.post('/api/saveChats', {
+              recents: recent
+            },{
+              withCredentials: true,
+            });
+            setSideList( (prev) => [...prev,recent] );
+
+
         }
         else{
             setLoading(false);
@@ -74,42 +119,15 @@ export default function MainApp() {
           </div>
 
           <div className="flex-1">
+            <h2 className="p-2 m-2">Recent chats</h2>
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Home className="h-4 w-4" />
-                Dashboard
-              </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Orders
-              </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
-              >
-                <Package className="h-4 w-4" />
-                Products{" "}
-              </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Users className="h-4 w-4" />
-                Customers
-              </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <LineChart className="h-4 w-4" />
-                Analytics
-              </Link>
+            <ScrollArea className="rounded-md border h-[450px]" >
+              { sideList.slice().reverse().map((chat, index) => {
+                return <div key={index} onClick={() => setList(chat) } className="m-2 p-1 rounded-md cursor-pointer hover:bg-gray-700 duration-100 transition-all">
+                  {chat[0].message.length > 25 ? `${chat[0].message.slice(0,25)} ...` : chat[0].message}
+                </div>
+              })}
+            </ScrollArea>
             </nav>
           </div>
 
@@ -129,49 +147,17 @@ export default function MainApp() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col">
+              <h2 className="p-2">Recent chats</h2>
               <nav className="grid gap-2 text-lg font-medium">
-                <Link
-                  href="#"
-                  className="flex items-center gap-2 text-lg font-semibold"
-                >
-                  <Package2 className="h-6 w-6" />
-                  <span className="sr-only">RAG-GPT</span>
-                </Link>
-                <Link
-                  href="#"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Home className="h-5 w-5" />
-                  Dashboard
-                </Link>
-                <Link
-                  href="#"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl bg-muted px-3 py-2 text-foreground hover:text-foreground"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Orders
-                </Link>
-                <Link
-                  href="#"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Package className="h-5 w-5" />
-                  Products
-                </Link>
-                <Link
-                  href="#"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Users className="h-5 w-5" />
-                  Customers
-                </Link>
-                <Link
-                  href="#"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <LineChart className="h-5 w-5" />
-                  Analytics
-                </Link>
+              
+              <ScrollArea className="rounded-md border h-[450px]" >
+                { sideList.slice().reverse().map((chat, index) => {
+                  return <div key={index} onClick={() => setList(chat) } className="m-2 p-1 rounded-md cursor-pointer hover:bg-gray-700 duration-100 transition-all">
+                    {chat[0].message.length > 25 ? `${chat[0].message.slice(0,25)} ...` : chat[0].message}
+                  </div>
+                })}
+              </ScrollArea>
+
               </nav>
               
             </SheetContent>
@@ -184,26 +170,42 @@ export default function MainApp() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
         <main className="flex flex-1 flex-col justify-between gap-4 p-4 lg:gap-6 lg:p-6">
             <div>
-                <ScrollArea className="rounded-md border">
-                    <div className="p-4">
-                        <h4 className="mb-4 text-sm font-medium leading-none">Chats</h4>
+                <ScrollArea className="rounded-md border h-[450px]" >
+                    <div className="p-4 flex flex-col gap-2">
+                        <h1 className="mb-4 text-2xl leading-none">Chats</h1>
+                        {
+                          list.map((chat, index) => {
+                            if(chat.type == "User"){
+                              return <div key={index} className="self-end p-3 max-w-3xl border-white/50 border rounded-md">
+                                  {chat.message}
+                              </div>
+                            }
+                            else{
+                              return <div key={index} className="self-start p-3 max-w-3xl border-white/50 border rounded-md">
+                                  {chat.message}
+                              </div>
+                            }
+                          })
+                        }
+                        {loading && <div className="flex items-center space-x-4">
+                          <Skeleton className="h-12 w-12 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-[250px]" />
+                            <Skeleton className="h-4 w-[200px]" />
+                          </div>
+                        </div>}
                         
                     </div>
                 </ScrollArea>
             </div>
             <form onSubmit={onSubmit} className="flex gap-5">
-                <Input type="file" onChange={ handleFileChange } className="w-34 cursor-pointer"/>
+                <Input type="file" accept=".txt" onChange={ handleFileChange } className="w-34 cursor-pointer"/>
                 <Input type="text" value={query} onChange={ (e) => setQuery(e.target.value) } placeholder="query" />
                 <Button>{ loading ? <LoaderCircle className="animate-spin" /> :  `Submit`}</Button>
             </form>
