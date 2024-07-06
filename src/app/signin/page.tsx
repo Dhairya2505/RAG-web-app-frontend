@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation.js";
 import axios from "axios";
+import { LoaderCircle } from "lucide-react";
 
 export default function SignIn() {
     
@@ -26,7 +27,7 @@ export default function SignIn() {
   const router = useRouter();
 
   const onSignIn = async () => {
-
+    setLoading(true);
     try {
 
       const response = await axios.post(
@@ -42,13 +43,15 @@ export default function SignIn() {
   
       if (response.data.status == 401 || response.data.status == 500) {
         setError(response.data.msg);
+        setLoading(false);
       } 
        else {
+        setLoading(false);
         router.push("/mainapp");
       }
       
     } catch (error) {
-
+      setLoading(false);
       setError("*Something went wrong");
 
     }
@@ -58,6 +61,7 @@ export default function SignIn() {
   
 
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
@@ -117,7 +121,7 @@ export default function SignIn() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button onClick={onSignIn} >Sign In</Button>
+          <Button onClick={onSignIn} >{ loading ? <LoaderCircle className="animate-spin" /> :  `Sign In` }</Button>
         </CardFooter>
       </Card>
       <div className="m-2">

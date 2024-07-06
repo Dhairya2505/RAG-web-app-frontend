@@ -18,6 +18,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation.js';
 import axios from "axios";
+import { LoaderCircle } from "lucide-react";
 
 export default function SignUp() {
   
@@ -32,23 +33,30 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+
   const onSignUp = async () => {
+    setLoading(true);
     setError("");
 
     if(username == ""){
       setError("*Username is required");
+      setLoading(false);
       return;
     }
     else if(email == ""){
       setError("*Email is required");
+      setLoading(false);
       return;
     }
     else if (password == "") {
       setError("*Password is required");
+      setLoading(false);
       return;
     }
     else if (password !== confirmPassword){
       setError("*Passwords do not match");
+      setLoading(false);
       return;
     }
 
@@ -60,9 +68,11 @@ export default function SignUp() {
 
     if(response.data.status == 409 || response.data.status == 500 ){
         setError(response.data.msg);
+        setLoading(false);
         return;
     }
     else{
+        setLoading(false);
         router.push('/signin');
     }
     
@@ -109,7 +119,7 @@ export default function SignUp() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button onClick={onSignUp} >Sign Up</Button>
+          <Button onClick={onSignUp} >{ loading ? <LoaderCircle className="animate-spin" /> :  `Sign Up` }</Button>
         </CardFooter>
       </Card>
       <div className="m-2">
