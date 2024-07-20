@@ -9,11 +9,10 @@ dotenv.config();
 export async function POST(req: NextRequest){
 
     const { username, password } = await req.json();
-
     try {
         await connect();
         const user = await users.findOne({ username });
-            
+        
         if(user){
             if(await compare(password, user.password)){
                 const secret_key =  process.env.SECRET_KEY || "";

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation.js";
 import axios from "axios";
@@ -40,7 +40,7 @@ export default function SignIn() {
           withCredentials: true,
         }
       );
-  
+      console.log(response)
       if (response.data.status == 401 || response.data.status == 500) {
         setError(response.data.msg);
         setLoading(false);

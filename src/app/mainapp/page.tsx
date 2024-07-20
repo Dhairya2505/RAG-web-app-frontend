@@ -70,6 +70,7 @@ export default function MainApp() {
     }
 
     const onSubmit = async (e: any) => {
+      if(!loading){
         e.preventDefault();
         setLoading(true);
         if(file && query){
@@ -95,13 +96,12 @@ export default function MainApp() {
               withCredentials: true,
             });
             setSideList( (prev) => [...prev,recent] );
-
-
         }
         else{
             setLoading(false);
             console.log("file and query both are required");
         }
+      }
 
     }
 
@@ -201,6 +201,23 @@ export default function MainApp() {
                         
                     </div>
                 </ScrollArea>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="secondary" onClick={(e) => {
+                setQuery('Given the following array of reviews, identify the main topics and themes');
+              }} >Main Topics</Button>
+              <Button variant="secondary" onClick={(e) => {
+                setQuery('Please extract all the pros mentioned in these reviews and calculate the percentage of positive reviews. A review is considered positive if it mentions good quality, performance, value, or a recommendation');
+              }} >Pros</Button>
+              <Button variant="secondary" onClick={(e) => {
+                setQuery('Please extract all the cons mentioned in these reviews and calculate the percentage of negative reviews. A review is considered negative if it mentions bad quality, performance issues, or not recommended');
+              }} >Cons</Button>
+              <Button variant="secondary" onClick={(e) => {
+                setQuery('You are given a list of product reviews. For each review, identify the best thing mentioned about the product.');
+              }} >Best Thing</Button>
+              <Button variant="secondary" onClick={(e) => {
+                setQuery('Please extract the main con about the product from these reviews. Identify the most frequently mentioned negative aspect.');
+              }} >Main Con</Button>
             </div>
             <form onSubmit={onSubmit} className="flex gap-5">
                 <Input type="file" accept=".txt" onChange={ handleFileChange } className="w-34 cursor-pointer"/>
